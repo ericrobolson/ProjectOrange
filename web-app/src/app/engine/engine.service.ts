@@ -15,7 +15,7 @@ export class EngineService implements OnDestroy {
 
   private frameId: number = null;
 
-  public constructor(private ngZone: NgZone) {}
+  public constructor(private ngZone: NgZone) { }
 
   public ngOnDestroy() {
     if (this.frameId != null) {
@@ -44,13 +44,13 @@ export class EngineService implements OnDestroy {
     this.scene.add(this.camera);
 
     // soft white light
-    this.light = new THREE.AmbientLight( 0x404040 );
+    this.light = new THREE.AmbientLight(0x404040);
     this.light.position.z = 10;
     this.scene.add(this.light);
 
     const geometry = new THREE.BoxGeometry(1, 1, 1);
     const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    this.cube = new THREE.Mesh( geometry, material );
+    this.cube = new THREE.Mesh(geometry, material);
     this.scene.add(this.cube);
 
   }
@@ -73,9 +73,10 @@ export class EngineService implements OnDestroy {
     this.frameId = requestAnimationFrame(() => {
       this.render();
     });
-
+    
     this.cube.rotation.x += 0.01;
     this.cube.rotation.y += 0.01;
+    this.cube.rotation.z += 0.02;
     this.renderer.render(this.scene, this.camera);
   }
 
@@ -86,6 +87,6 @@ export class EngineService implements OnDestroy {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
 
-    this.renderer.setSize( width, height );
+    this.renderer.setSize(width, height);
   }
 }
