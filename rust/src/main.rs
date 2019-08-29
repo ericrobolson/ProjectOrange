@@ -1,10 +1,8 @@
 use std::sync::mpsc;
-use std::sync::{Arc, Mutex};
 use std::thread;
 
 mod command_buffer;
-use command_buffer::Buffer;
-use std::mem;
+
 
 fn collect_input(data: &mut command_buffer::InputData) {
     data.reset();
@@ -22,13 +20,13 @@ fn main() {
     //// Swap
     //// Logic update
     //// Extract render commands
-    
-    
+        
     // Main thread:
     //// Collect input
     //// Swap
     //// Render render commands
     
+    // Message channels
     let (tx1, rx1) = mpsc::channel();
     let (tx2, rx2) = mpsc::channel();
 
@@ -59,5 +57,6 @@ fn main() {
         // Render render commands
         render(); // TODO: actually wire up
     }
+
     let res = child.join();
 }

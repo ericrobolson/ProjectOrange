@@ -1,4 +1,7 @@
-import * as THREE from 'three';
+import * as THREE from 'src/js/three.js';
+import * as PW from 'src/js/PromiseWorker';
+import * as GameWorker from 'src/js/GameWorker.js';
+
 import { Injectable, ElementRef, OnDestroy, NgZone } from '@angular/core';
 
 @Injectable({
@@ -15,12 +18,22 @@ export class EngineService implements OnDestroy {
 
   private frameId: number = null;
 
-  public constructor(private ngZone: NgZone) { }
+  private gameWorker: PW.PromiseWorker<undefined, undefined>;
+
+  public constructor(private ngZone: NgZone) {
+    GameWorker;
+
+    let worker = new Worker('GameWorker.js');
+    this.gameWorker = new PW.PromiseWorker<undefined, undefined>('GameWorker.js'); //TODO: update worker.js to be real
+  }
+
 
   public ngOnDestroy() {
     if (this.frameId != null) {
       cancelAnimationFrame(this.frameId);
     }
+
+    this.gameWorker.terminate();
   }
 
   createScene(canvas: ElementRef<HTMLCanvasElement>): void {
@@ -52,15 +65,14 @@ export class EngineService implements OnDestroy {
     const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
     this.cube = new THREE.Mesh(geometry, material);
     this.scene.add(this.cube);
-
   }
 
-  animate(): void {
+  begin(): void {
     // We have to run this outside angular zones,
     // because it could trigger heavy changeDetection cycles.
     this.ngZone.runOutsideAngular(() => {
       window.addEventListener('DOMContentLoaded', () => {
-        this.render();
+        this.mainLoop();
       });
 
       window.addEventListener('resize', () => {
@@ -69,14 +81,15 @@ export class EngineService implements OnDestroy {
     });
   }
 
-  render() {
+  mainLoop() {
     this.frameId = requestAnimationFrame(() => {
-      this.render();
+      this.mainLoop();
     });
-    
+
     this.cube.rotation.x += 0.01;
     this.cube.rotation.y += 0.01;
     this.cube.rotation.z += 0.02;
+
     this.renderer.render(this.scene, this.camera);
   }
 
