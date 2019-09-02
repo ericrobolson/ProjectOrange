@@ -1,7 +1,7 @@
 use std::sync::mpsc;
 use std::thread;
 
-mod Risp;
+mod lust;
 mod command_buffer;
 
 
@@ -15,7 +15,7 @@ fn render() {
 }
 
 fn main() {
-    Risp::execute_repl();
+    lust::execute_repl();
 
     // Two threads; main thread and game thread
     
