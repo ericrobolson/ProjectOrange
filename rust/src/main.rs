@@ -16,7 +16,6 @@ fn render() {
 
 fn main() {
     lust::execute_repl();
-
     // Two threads; main thread and game thread
     
     // Game thread:    
