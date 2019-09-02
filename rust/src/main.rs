@@ -1,6 +1,7 @@
 use std::sync::mpsc;
 use std::thread;
 
+mod Risp;
 mod command_buffer;
 
 
@@ -14,6 +15,8 @@ fn render() {
 }
 
 fn main() {
+    Risp::execute_repl();
+
     // Two threads; main thread and game thread
     
     // Game thread:    
@@ -25,7 +28,7 @@ fn main() {
     //// Collect input
     //// Swap
     //// Render render commands
-    
+    /*
     // Message channels
     let (tx1, rx1) = mpsc::channel();
     let (tx2, rx2) = mpsc::channel();
@@ -59,4 +62,5 @@ fn main() {
     }
 
     let res = child.join();
+    */
 }

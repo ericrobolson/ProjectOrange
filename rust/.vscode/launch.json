@@ -9,7 +9,7 @@
             "name": "(Windows) Debug",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/target/debug/projectOrange.exe",
+            "program": "${workspaceFolder}/target/debug/project_orange.exe",
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "externalConsole": true
