@@ -7,8 +7,6 @@ use std::rc::Rc;
 //TODO: Create macros for embeddable LUST code?
 // TODO: Rename 'Lust' to 'Lust'
 
-type LustFloat = f64; // can be subbed with fixed point integer for determinism
-
 macro_rules! ensure_tonicity {
     ($check_fn:expr) => {{
         |args: &[LustExp]| -> Result<LustExp, LustErr> {
@@ -28,8 +26,13 @@ macro_rules! ensure_tonicity {
     }};
 }
 
+
+
+pub type LustFloat = f64; // can be subbed with fixed point integer for determinism
+
+
 #[derive(Clone)]
-enum LustExp {
+pub enum LustExp {
     Bool(bool),
     Symbol(String),
     Number(LustFloat),
@@ -40,91 +43,37 @@ enum LustExp {
 }
 
 #[derive(Clone)]
-struct LustLambda {
+pub struct LustLambda {
     params_exp: Rc<LustExp>,
     body_exp: Rc<LustExp>
 }
 
 #[derive(Debug)]
-enum LustErr {
+pub enum LustErr {
     Reason(String),
 }
 
 #[derive(Clone)]
-struct LustEnv<'a> {
+pub struct LustEnv<'a> {
     data: HashMap<String, LustExp>,
     outer: Option<&'a LustEnv<'a>>
 }
 
-fn tokenize(expr: String) -> Vec<String> {
-    expr.replace("(", " ( ")
-        .replace(")", " ) ")
-        .split_whitespace()
-        .map(|x| x.to_string())
-        .collect()
-}
-
-fn parse<'a>(tokens: &'a [String]) -> Result<(LustExp, &'a [String]), LustErr> {
-    let (token, rest) = tokens
-        .split_first()
-        .ok_or(LustErr::Reason("could not get token".to_string()))?;
-    match &token[..] {
-        "\"" => read_str(rest),
-        "(" => read_seq(rest),
-        ")" => Err(LustErr::Reason("unexpected `)`".to_string())),
-        _ => Ok((parse_atom(token), rest)),
-    }
-}
-
-fn read_str<'a>(tokens: &'a [String]) -> Result<(LustExp, &'a [String]), LustErr> {
-    let mut res: Vec<LustExp> = vec![];
-    let mut string = String::new();
-    let mut xs = tokens;
-
-    // loop thru tokens until string is completed:
-    // build up sttream after
-
-    loop {
-        let (next_token, rest) = xs
-            .split_first()
-            .ok_or(LustErr::Reason("could not find closing `\"`".to_string()))?;
-        if next_token == "\"" {
-            //TODO: parse rest of the stuff
-            return Ok((LustExp::Str(res), rest)); // skip `)`, head to the token after
-        }
-        let (exp, new_xs) = parse(&xs)?;
-        res.push(exp);
-        xs = new_xs;
-    }
-}
-
-fn read_seq<'a>(tokens: &'a [String]) -> Result<(LustExp, &'a [String]), LustErr> {
-    let mut res: Vec<LustExp> = vec![];
-    let mut xs = tokens;
-    loop {
-        let (next_token, rest) = xs
-            .split_first()
-            .ok_or(LustErr::Reason("could not find closing `)`".to_string()))?;
-        if next_token == ")" {
-            return Ok((LustExp::List(res), rest)); // skip `)`, head to the token after
-        }
-        let (exp, new_xs) = parse(&xs)?;
-        res.push(exp);
-        xs = new_xs;
-    }
-}
-
-fn parse_atom(token: &str) -> LustExp {
-    match token.as_ref() {
-        "true" => LustExp::Bool(true),
-        "false" => LustExp::Bool(false),
-        _ => {
-            let potential_float: Result<LustFloat, num::ParseFloatError> = token.parse();
-            match potential_float {
-                Ok(v) => LustExp::Number(v),
-                Err(_) => LustExp::Symbol(token.to_string().clone()),
+impl fmt::Display for LustExp {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let str = match self {
+            LustExp::Bool(b) => b.to_string(),
+            LustExp::Symbol(s) => s.clone(),
+            LustExp::Number(n) => n.to_string(),
+            LustExp::List(list) => {
+                let xs: Vec<String> = list.iter().map(|x| x.to_string()).collect();
+                format!("({})", xs.join(","))
             }
-        }
+            LustExp::Func(_) => "Function {}".to_string(),
+            LustExp::Lambda(_) => "Lambda {}".to_string(),
+            LustExp::Str(_) => "String {}".to_string(),
+        };
+        return write!(f, "{}", str);
     }
 }
 
@@ -394,23 +343,6 @@ fn eval_def_args(arg_forms: &[LustExp], env: &mut LustEnv) -> Result<LustExp, Lu
   return Ok(first_form.clone())
 }
 
-impl fmt::Display for LustExp {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let str = match self {
-            LustExp::Bool(b) => b.to_string(),
-            LustExp::Symbol(s) => s.clone(),
-            LustExp::Number(n) => n.to_string(),
-            LustExp::List(list) => {
-                let xs: Vec<String> = list.iter().map(|x| x.to_string()).collect();
-                format!("({})", xs.join(","))
-            }
-            LustExp::Func(_) => "Function {}".to_string(),
-            LustExp::Lambda(_) => "Lambda {}".to_string(),
-            LustExp::Str(_) => "String {}".to_string(),
-        };
-        return write!(f, "{}", str);
-    }
-}
 
 fn parse_eval(expr: String, env: &mut LustEnv) -> Result<LustExp, LustErr> {
     let (parsed_exp, _) = parse(&tokenize(expr))?;
@@ -467,5 +399,105 @@ impl LustRuntime<'_>{
 
     fn execute(&mut self, expr: String) -> Result<LustExp, LustErr>{        
         return parse_eval(expr, &mut self.env);
+    }
+}
+
+
+pub fn tokenize(expr: String) -> Vec<String> {
+    expr.replace("(", " ( ")
+        .replace(")", " ) ")
+        .split_whitespace()
+        .map(|x| x.to_string())
+        .collect()
+}
+
+pub fn parse<'a>(tokens: &'a [String]) -> Result<(LustExp, &'a [String]), LustErr> {
+    let (token, rest) = tokens
+        .split_first()
+        .ok_or(LustErr::Reason("could not get token".to_string()))?;
+    match &token[..] {
+        "\"" => read_str(rest, '"'),
+        "\'" => read_str(rest, '\''),
+        "(" => read_seq(rest),
+        ")" => Err(LustErr::Reason("unexpected `)`".to_string())),
+        _ => Ok((parse_atom(token), rest)),
+    }
+}
+
+fn read_str<'a>(tokens: &'a [String], end_character: char) -> Result<(LustExp, &'a [String]), LustErr> {
+    let mut res: Vec<LustExp> = vec![];
+    let mut string = String::new();
+    let mut xs = tokens;
+
+    let len = tokens.len();
+    let mut end_character_found = false;
+    let mut end_character_index = 0;
+
+    for i in 0..len{
+        string.push_str(&tokens[i]);
+
+        if tokens[i].ends_with(end_character){
+            // remove endchar
+            string = string.replace(end_character, "");
+
+            end_character_found = true;            
+            end_character_index = i;
+            break;
+        }        
+
+        string.push_str(&tokens[i]);
+    }
+
+    if !end_character_found {
+        return Err(LustErr::Reason(format!("could not find closing `{}`", end_character).to_string()));
+    }
+
+    return Ok((LustExp::Str(string), &tokens[end_character_index..]));  
+}
+
+fn read_seq<'a>(tokens: &'a [String]) -> Result<(LustExp, &'a [String]), LustErr> {
+    let mut res: Vec<LustExp> = vec![];
+    let mut xs = tokens;
+    loop {
+        let (next_token, rest) = xs
+            .split_first()
+            .ok_or(LustErr::Reason("could not find closing `)`".to_string()))?;
+        if next_token == ")" {
+            return Ok((LustExp::List(res), rest)); // skip `)`, head to the token after
+        }
+        let (exp, new_xs) = parse(&xs)?;
+        res.push(exp);
+        xs = new_xs;
+    }
+}
+
+fn parse_atom(token: &str) -> LustExp {
+    match token.as_ref() {
+        "true" => LustExp::Bool(true),
+        "false" => LustExp::Bool(false),
+        _ => {
+            let potential_float: Result<LustFloat, num::ParseFloatError> = token.parse();
+            match potential_float {
+                Ok(v) => LustExp::Number(v),
+                Err(_) => LustExp::Symbol(token.to_string().clone()),
+            }
+        }
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn add_numbers(){
+        let mut runtime = LustRuntime::new();
+
+        let mut res = runtime.execute_s("(+ 1 2)".to_string());
+        assert_eq!(res.unwrap(), "3");
+
+        res = runtime.execute_s("(+ 3 -2)".to_string());
+        assert_eq!(res.unwrap(), "1");    
     }
 }
