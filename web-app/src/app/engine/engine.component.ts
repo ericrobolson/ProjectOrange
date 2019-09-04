@@ -16,5 +16,4 @@ export class EngineComponent implements OnInit {
     this.engServ.createScene(this.rendererCanvas);
     this.engServ.begin();
   }
-
 }

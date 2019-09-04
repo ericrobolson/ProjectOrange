@@ -392,7 +392,12 @@ impl LustRuntime<'_>{
     pub fn execute_s(&mut self, expr: String) -> Result<String, String>{        
         match parse_eval(expr, &mut self.env){
             Ok(res) => return Ok(res.to_string()),
-            Err(e) => return Err("todo: critical failure; add in the error handling".to_string())
+            Err(e) => {
+                match e {
+                    LustErr::Reason(s) => return Err(s),
+                    _ => return Err("unable to determine error".to_string())
+                }
+            }
         }
     }
 
@@ -499,5 +504,17 @@ mod tests {
 
         res = runtime.execute_s("(+ 3 -2)".to_string());
         assert_eq!(res.unwrap(), "1");    
+    }
+
+    #[test]
+    fn lambda_one(){
+        let mut runtime = LustRuntime::new();
+
+        runtime.execute_s("(defn fd (fn (a) (a)))".to_string());
+
+        let mut res = runtime.execute_s("(fd 3)".to_string());
+
+
+        assert_eq!(res.unwrap(), "3");
     }
 }

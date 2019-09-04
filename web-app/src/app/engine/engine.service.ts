@@ -1,6 +1,4 @@
 import * as THREE from 'src/js/three.js';
-import * as PW from 'src/js/PromiseWorker';
-import * as GameWorker from 'src/js/GameWorker.js';
 
 import { Injectable, ElementRef, OnDestroy, NgZone } from '@angular/core';
 
@@ -18,13 +16,8 @@ export class EngineService implements OnDestroy {
 
   private frameId: number = null;
 
-  private gameWorker: PW.PromiseWorker<undefined, undefined>;
-
   public constructor(private ngZone: NgZone) {
-    GameWorker;
 
-    let worker = new Worker('GameWorker.js');
-    this.gameWorker = new PW.PromiseWorker<undefined, undefined>('GameWorker.js'); //TODO: update worker.js to be real
   }
 
 
@@ -32,8 +25,6 @@ export class EngineService implements OnDestroy {
     if (this.frameId != null) {
       cancelAnimationFrame(this.frameId);
     }
-
-    this.gameWorker.terminate();
   }
 
   createScene(canvas: ElementRef<HTMLCanvasElement>): void {
