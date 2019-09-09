@@ -1,6 +1,8 @@
 import { PNode } from './pNode';
 
 export class PGraph {
+    title: string;
+
     nodes: PNode[] = [];
 
     startNodeIndex: number = -1;

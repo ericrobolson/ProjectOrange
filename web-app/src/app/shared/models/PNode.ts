@@ -1,4 +1,6 @@
 export class PNode {
+    title: string;
+
     inputs: any[] = []; // TODO: actually figure out; maybe pointer/message promise/observable + forkJoin?. In actuality, this is just a json representation, ya?
     outputs: any[] = []; // TODO: actually figure out; maybe pointer/message promise/observable + forkJoin?. In actuality, this is just a json representation, ya?
 
