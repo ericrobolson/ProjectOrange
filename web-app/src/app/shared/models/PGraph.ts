@@ -2,6 +2,7 @@ import { PNode } from './pNode';
 
 export class PGraph {
     title: string;
+    id: string;
 
     nodes: PNode[] = [];
 
