@@ -1,0 +1,15 @@
+<div>
+
+    <p>Graph Name: {{graph.title}}</p>
+    <p>Graph Id: {{graph.id}}</p>
+
+    <app-textbox Placeholder="Graph Title"></app-textbox>
+    
+    <div>
+        <button class="btn btn-primary">Add Node</button>
+    </div>
+
+    <li *ngFor="let hero of graph.nodes">
+        {{hero.title}}
+    </li>    
+</div>
